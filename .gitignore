@@ -1,0 +1,11 @@
+middlewares/**
+*.o
+*.s
+*.d
+*.atwp
+*.crf
+*.hh
+*.uv*
+*.ini
+/project/MDK_V5/listings/
+/project/MDK_V5/objects/
