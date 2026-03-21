@@ -58,16 +58,66 @@
 
 /* private variables ---------------------------------------------------------*/
 /* add user code begin private variables */
-    __IO uint16_t adc1_ordinary_valuetab[DMA1_CHANNEL1_BUFFER_SIZE] = {0};    //Ã¿Í¨µÀÈ¡5¸öÊý¾Ý£¬¹²ÓÐ12¸öchannel
+    __IO uint16_t adc1_ordinary_valuetab[DMA1_CHANNEL1_BUFFER_SIZE] = {0};    //Ã¿Í¨ï¿½ï¿½È¡5ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½ï¿½ï¿½12ï¿½ï¿½channel
 /* add user code end private variables */
 
 /* private function prototypes --------------------------------------------*/
 /* add user code begin function prototypes */
-
+static __IO uint32_t fac_us;
+static __IO uint32_t fac_ms;
+#define STEP_DELAY_MS 50
 /* add user code end function prototypes */
 
 /* private user code ---------------------------------------------------------*/
 /* add user code begin 0 */
+
+/**
+ * @brief  initialize delay function
+ * @param  none
+ * @retval none
+ */
+void delay_init()
+{
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  DWT->CYCCNT = 0;
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+  /* configure systick */
+  systick_clock_source_config(SYSTICK_CLOCK_SOURCE_AHBCLK_NODIV);
+  fac_us = system_core_clock / (1000000U);
+  fac_ms = fac_us * (1000U);
+}
+
+/**
+ * @brief  inserts a delay time.
+ * @param  nms: specifies the delay time length, in milliseconds.
+ * @retval none
+ */
+void delay_ms(uint16_t nms)
+{
+  uint32_t temp = 0;
+  while (nms)
+  {
+    if (nms > STEP_DELAY_MS)
+    {
+      SysTick->LOAD = (uint32_t)(STEP_DELAY_MS * fac_ms);
+      nms -= STEP_DELAY_MS;
+    }
+    else
+    {
+      SysTick->LOAD = (uint32_t)(nms * fac_ms);
+      nms = 0;
+    }
+    SysTick->VAL = 0x00;
+    SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
+    do
+    {
+      temp = SysTick->CTRL;
+    } while ((temp & 0x01) && !(temp & (1 << 16)));
+
+    SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
+    SysTick->VAL = 0x00;
+  }
+}
 
 /* add user code end 0 */
 
@@ -116,7 +166,7 @@ int main(void)
   wk_usart2_init();
 
   /* init adc1 function. */
-  wk_adc1_init();
+  // wk_adc1_init();
 
   /* init tmr1 function. */
   wk_tmr1_init();
@@ -127,21 +177,12 @@ int main(void)
   /* init dac function. */
   wk_dac_init();
 
+  delay_init();
+  delay_ms(200);
+
   /* init freertos function. */
   wk_freertos_init();
-
-  /* add user code begin 2 */
-
-  
-  /* add user code end 2 */
-
-  while(1)
-  {
-    /* add user code begin 3 */
-
-	  
-    /* add user code end 3 */
-  }
+  while(1);
 }
 
   /* add user code begin 4 */

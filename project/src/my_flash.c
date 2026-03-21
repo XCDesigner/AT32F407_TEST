@@ -13,9 +13,9 @@ volatile uint16_t lastDuty[8] = {0,0,0,0,100,100,100,100};
 // 默认配置，放到 FLASH 区段
  DeviceConfig_t runConfig = {
 	8,                      // 定时器编号
-	1,                      // PWM 通道号，例：TMR_SELECT_CHANNEL_1
+	4,                      // PWM 通道号，例：TMR_SELECT_CHANNEL_1
     1,                      // DAC 号，例：DAC1_SELECT
-    0,                     // PWM 占空比，0~100 对应 0%~100%
+    100,                     // PWM 占空比，0~100 对应 0%~100%
 	50000,                  // PWM 频率，单位 Hz
 	500,                    //DAC 输出大小 例：0-4095
 	0,                      //用于判断下次FLASH写入的地址
@@ -153,31 +153,6 @@ static const uint16_t TMR_ChannelMap[4] = {
     TMR_SELECT_CHANNEL_4
 };
 
-
-//void PWM_Update(const DeviceConfig_t *cfg){ 
-//	tmr_type *TMRx = (tmr_type *)TMR_Instances[cfg->pwm_timer_id - 1];
-//    uint16_t  chMx = TMR_ChannelMap[cfg->pwm_channel_id - 1];
-//	
-//	uint32_t timerClk = SystemCoreClock;    
-//	// 计算 ARR（自动重装载值）和 CCR（比较值）
-//														 
-//    uint32_t psc    = 1;    // PSC
-//    uint32_t arr    = timerClk / psc / cfg->pwm_frequency - 1;   //ARR
-//    uint32_t ccr    = (uint32_t)(((uint64_t)(arr + 1) * cfg->pwm_duty) / 100);    //CCR
-//	
-//	/*暂停计数，更新周期并写入比较值，再重启 */
-//    tmr_counter_enable(TMRx, FALSE);
-//	
-//	/* 重载周期 (ARR) 和预分频 (PSC)，然后立即产生更新事件*/
-//    tmr_base_init(TMRx, arr, 1);
-//	tmr_event_sw_trigger(TMRx,TMR_TRIGGER_SWTRIG);
-//	
-//    /* 更新通道比较值 */
-//    tmr_channel_value_set(TMRx, chMx, ccr);
-
-//    /* 重启定时器，新的 PWM 立即生效 */
-//    tmr_counter_enable(TMRx, TRUE);
-//}
 /**
  * @brief  更新 PWM 占空比（0~100，对应 0~100%）。
  * @param  TMRx        定时器实例

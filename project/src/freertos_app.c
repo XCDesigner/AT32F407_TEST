@@ -96,7 +96,6 @@ static StaticTask_t timer_task_tcb;
 /* External Idle and Timer task static memory allocation functions */
 extern void vApplicationGetIdleTaskMemory( StaticTask_t ** ppxIdleTaskTCBBuffer, StackType_t ** ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize );
 extern void vApplicationGetTimerTaskMemory( StaticTask_t ** ppxTimerTaskTCBBuffer, StackType_t ** ppxTimerTaskStackBuffer, uint32_t * pulTimerTaskStackSize );
-
 /*
   vApplicationGetIdleTaskMemory gets called when configSUPPORT_STATIC_ALLOCATION
   equals to 1 and is required for static memory allocation support.
@@ -127,15 +126,15 @@ void vApplicationGetTimerTaskMemory( StaticTask_t ** ppxTimerTaskTCBBuffer, Stac
   * @param  none
   * @retval none
   */
-void freertos_task_create(void)
+void freertos_task_create()
 {
   /* create temperature_task task */
-  xTaskCreate(temperature_task_func,
-              "temperature_task",
-              128,
-              NULL,
-              9,
-              &temperature_task_handle);
+  // xTaskCreate(temperature_task_func,
+  //             "temperature_task",
+  //             128,
+  //             NULL,
+  //             9,
+  //             &temperature_task_handle);
 
   /* create current_task task */
   xTaskCreate(current_task_func,
@@ -203,6 +202,8 @@ void freertos_semaphore_create(void)
   dma_binary_sem_handle = xSemaphoreCreateBinary();
 }
 
+
+
 /**
   * @brief  freertos init and begin run.
   * @param  none
@@ -215,6 +216,7 @@ void wk_freertos_init(void)
 
   freertos_semaphore_create();
   freertos_queue_create();
+
   freertos_task_create();
 	
   /* exit critical */
@@ -280,6 +282,10 @@ void temperature_task_func(void *pvParameters)
   */
 void current_task_func(void *pvParameters)
 {
+  runConfig.pwm_timer_id = (uint16_t)8;
+  runConfig.pwm_channel_id = 4;
+  PWM_Update_Duty(&runConfig);
+  xTaskNotifyGive(update_task_handle);
   while(1)
   {
     vTaskDelay(1);
@@ -365,63 +371,51 @@ void update_task_func(void *pvParameters)
 void key_task_func(void *pvParameters)
 {
   /* add user code begin key_task_func 0 */
-	#define NUM_KEYS        4
+	#define NUM_KEYS        1
 	
-	uint8_t curState = 0,i;
+	uint8_t i;
 	int key = 0;
-	uint8_t lastState[NUM_KEYS]= {0};
+	static uint8_t lastState = 0;
+  uint8_t curState = 0;
+  uint8_t count = 0;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	   
 	static const uint16_t keyPins[NUM_KEYS] = {
-    GPIO_PINS_0,    // Key 1
-    GPIO_PINS_1,    // Key 2
-    GPIO_PINS_2,    // Key 3
-	  GPIO_PINS_13    // Key 4
+    GPIO_PINS_3,    // Key 1
   };
-	
-  for (i = 0; i < NUM_KEYS; i++) {
-    lastState[i] = gpio_input_data_bit_read(GPIOD, keyPins[i]);     //   取  始状态 GPIOD
-  }
-  /* add user code end key_task_func 0 */
 
   /* Infinite loop */
   while(1)
   {
-  /* add user code begin key_task_func 1 */
-
-    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(10)); 	 //    直    一  扫      
+    curState = 0;
 	  for (i = 0; i < NUM_KEYS; i++) 
     {
-      curState = gpio_input_data_bit_read(GPIOD, keyPins[i]);         //  取  前  平
-      //   状态 浠�
-      if (curState != lastState[i])
-      {
-        vTaskDelay(pdMS_TO_TICKS(10));                   //       时
-        curState = gpio_input_data_bit_read(GPIOD, keyPins[i]);
-        //    确 虾  圆 同   隙   效  转
-        if (curState != lastState[i])
-        {
-          if (curState)
-          {
-            //      兀 0  1          
-            printf("Key%d pressed\r\n",i+1);
-            key = i+1;
-            xQueueSend(key_queue_handle, &key, 0);
-            xTaskNotifyGive(update_task_handle);		// 通知 update_task
+      if (gpio_input_data_bit_read(GPIOC, keyPins[i]) == RESET)
+        curState |= (1 << i);
+    }
+
+    if (curState == lastState) {
+      if (count < 200)
+        count++;
+    }
+    else {
+      if (curState != 0) {
+        // 触发单击事件
+        if ((count > 3) && (count < 50)) {
+          switch(curState) {
+            case 0x01:
+              if (gpio_output_data_bit_read(GPIOB, GPIO_PINS_6) == TRUE)
+                gpio_bits_write(GPIOB, GPIO_PINS_6, FALSE);
+              else
+                gpio_bits_write(GPIOB, GPIO_PINS_6, TRUE);
+            break;
           }
-          else
-          {
-            //  陆  兀 1  0       煽 
-            printf("Key%d released\r\n",i+1);
-            key = -i-1;
-            xQueueSend(key_queue_handle, &key, 0);
-            xTaskNotifyGive(update_task_handle);		// 通知 update_task
-          }
-          lastState[i] = curState;        //     洗 状态
         }
       }
-	  }
-  /* add user code end key_task_func 1 */
+      count = 0;
+    }
+    lastState = curState;
+    vTaskDelay(pdMS_TO_TICKS(100));
   }
 }
 /* add user code begin 2 */
