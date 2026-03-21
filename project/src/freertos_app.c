@@ -362,6 +362,28 @@ void update_task_func(void *pvParameters)
   }
 }
 
+enum {
+  MODE_IDLE = 0,
+  MODE_ON,
+  MODE_RANDOM
+};
+
+void Process(uint8_t mode) 
+{
+  switch(mode) {
+    case MODE_IDLE:
+      gpio_bits_write(GPIOB, GPIO_PINS_6, FALSE);
+      
+    break;
+
+    case MODE_ON:
+      gpio_bits_write(GPIOB, GPIO_PINS_6, TRUE);
+    break;
+
+    case MODE_RANDOM:
+    break;
+  }
+}
 
 /**
   * @brief key_task function.
@@ -377,6 +399,7 @@ void key_task_func(void *pvParameters)
 	int key = 0;
 	static uint8_t lastState = 0;
   uint8_t curState = 0;
+  uint8_t work_mode = 0;
   uint8_t count = 0;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	   

@@ -34,12 +34,7 @@ static uint8_t Flash_DetectLastFlag(void)
     for (i = 0; i < FLASH_SLOT_COUNT; i++) {
         uint32_t addr = FLASH_SECTOR_ADDR + i * FLASH_SLOT_SIZE;
         memcpy(&tmp, (void *)addr, sizeof(tmp));
-		
-//		crcCalc = CRC32_Calc(&tmp, offsetof(DeviceConfig_t, crc));
-//        if (crcCalc != tmp.crc) {
-//            continue;  // CRC 不通过，跳过
-//        }
-		
+
         // 判断这个扇区里有没有写过合法的 flag
         if (tmp.flag < FLASH_SLOT_COUNT &&
 			(bestIdx < 0 || tmp.flag > maxFlag)) {
@@ -176,7 +171,7 @@ void PWM_Update_Duty(const DeviceConfig_t *cfg){
 	
 	// 存储最新PWM脉宽到 lastDuty[]
 	if(cfg->pwm_timer_id == 3){
-		 index = (cfg->pwm_channel_id - 1);            // CH1→idx=0, CH4→idx=3 
+		 index = (cfg->pwm_channel_id - 1);
 	}
 	else{
 		 index = 4 + (cfg->pwm_channel_id - 1);
@@ -185,9 +180,6 @@ void PWM_Update_Duty(const DeviceConfig_t *cfg){
 	
     /* 重启定时器，新的 PWM 立即生效 */
     tmr_counter_enable(TMRx, TRUE);
-//	for ( i = 4; i <= 7; i++)
-//    printf("restore lastDuty[%d] = %d\n", i, lastDuty[i]);
-
 }
 /**
  * @brief  更新 PWM 频率（Hz）。
@@ -234,130 +226,43 @@ void KEY_Update(void){
 	if (xQueueReceive(key_queue_handle, &recvKey, pdMS_TO_TICKS(10)) == pdTRUE)     // 成功接收，可以处理 recvKey
 		{ 
 			
-		   if(recvKey == 1){         //Key1按下  使能
-//			   tmr_counter_enable(TMR1, FALSE);              //PWM恢复
-//			   tmr_counter_enable(TMR8, FALSE);
-			   
-//			   tmr_channel_value_set(TMR1, TMR_SELECT_CHANNEL_1, lastDuty[0]);
-//			   tmr_channel_value_set(TMR1, TMR_SELECT_CHANNEL_2, lastDuty[1]);
-//			   tmr_channel_value_set(TMR1, TMR_SELECT_CHANNEL_3, lastDuty[2]);
-//             tmr_channel_value_set(TMR1, TMR_SELECT_CHANNEL_4, lastDuty[3]);
-//			   tmr_channel_value_set(TMR8, TMR_SELECT_CHANNEL_1, lastDuty[4]);
-//			   tmr_channel_value_set(TMR8, TMR_SELECT_CHANNEL_2, lastDuty[5]);
-//			   tmr_channel_value_set(TMR8, TMR_SELECT_CHANNEL_3, lastDuty[6]);
-////			   tmr_channel_value_set(TMR8, TMR_SELECT_CHANNEL_4, lastDuty[7]);
-//			   tmr_event_sw_trigger(TMR8,TMR_TRIGGER_SWTRIG);
-//			   tmr_counter_enable(TMR1, TRUE);
-//			   tmr_counter_enable(TMR8, TRUE);
-			   
-//			   gpio_bits_set(GPIOB, GPIO_PINS_3);//IO使能
-//			   gpio_bits_set(GPIOB, GPIO_PINS_4);
-//			   gpio_bits_set(GPIOB, GPIO_PINS_5);
+		   if(recvKey == 1) {         //Key1按下  使能
 			   gpio_bits_set(GPIOB, GPIO_PINS_6);
 			   gpio_bits_set(GPIOD, GPIO_PINS_6);
 		   }
-		   else if(recvKey == -1){         //Key1弹起
-//			   tmr_counter_enable(TMR1, FALSE);          //PWM，脉宽为0
-//			   tmr_counter_enable(TMR8, FALSE);
-			   
-//			   tmr_channel_value_set(TMR1, TMR_SELECT_CHANNEL_1, 0);
-//			   tmr_channel_value_set(TMR1, TMR_SELECT_CHANNEL_2, 0);
-//			   tmr_channel_value_set(TMR1, TMR_SELECT_CHANNEL_3, 0);
-//			   tmr_channel_value_set(TMR1, TMR_SELECT_CHANNEL_4, 0);
-//			   tmr_channel_value_set(TMR8, TMR_SELECT_CHANNEL_1, 0);
-//			   tmr_channel_value_set(TMR8, TMR_SELECT_CHANNEL_2, 0);
-//			   tmr_channel_value_set(TMR8, TMR_SELECT_CHANNEL_3, 0);
-////			   tmr_channel_value_set(TMR8, TMR_SELECT_CHANNEL_4, 0);
-//		       tmr_event_sw_trigger(TMR1,TMR_TRIGGER_SWTRIG);
-//			   tmr_event_sw_trigger(TMR8,TMR_TRIGGER_SWTRIG);
-			   
-//			   tmr_counter_enable(TMR1, TRUE);
-//			   tmr_counter_enable(TMR8, TRUE);     
-			   
+		   else if(recvKey == -1) {         //Key1弹起 
 			   gpio_bits_reset(GPIOB, GPIO_PINS_6);//IO失能
 			   gpio_bits_reset(GPIOD, GPIO_PINS_6);
 		   }
 		   else if(recvKey == 2)
 		   {
-//			   tmr_channel_value_set(TMR8, TMR_SELECT_CHANNEL_3, lastDuty[6]);
-//			   tmr_event_sw_trigger(TMR8,TMR_TRIGGER_SWTRIG);
-//			   tmr_counter_enable(TMR8, TRUE);
 			   gpio_bits_set(GPIOB, GPIO_PINS_5);
 			   gpio_bits_set(GPIOD, GPIO_PINS_5);
 		   }
 		   else if(recvKey == -2)
 		   {			  
-//			   tmr_channel_value_set(TMR8, TMR_SELECT_CHANNEL_3, 0);
-//			   tmr_event_sw_trigger(TMR8,TMR_TRIGGER_SWTRIG);
-//			   tmr_counter_enable(TMR8, TRUE);
 			   gpio_bits_reset(GPIOB, GPIO_PINS_5);
 			   gpio_bits_reset(GPIOD, GPIO_PINS_5);
 		   }
 		   else if(recvKey == 3)
 		   {
-//			   tmr_channel_value_set(TMR8, TMR_SELECT_CHANNEL_2, lastDuty[5]);
-//			   tmr_event_sw_trigger(TMR8,TMR_TRIGGER_SWTRIG);
-//			   tmr_counter_enable(TMR8, TRUE);
 			   gpio_bits_set(GPIOB, GPIO_PINS_4);
 			   gpio_bits_set(GPIOD, GPIO_PINS_4);
 		   } 
 		   else if(recvKey == -3)
 		   {
-//			   tmr_channel_value_set(TMR8, TMR_SELECT_CHANNEL_2, 0);
-//			   tmr_event_sw_trigger(TMR8,TMR_TRIGGER_SWTRIG);
-//			   tmr_counter_enable(TMR8, TRUE);
 			   gpio_bits_reset(GPIOB, GPIO_PINS_4);
 			   gpio_bits_reset(GPIOD, GPIO_PINS_4);
 		   }
 		   else if(recvKey == 4)
 		   {
-//			   tmr_channel_value_set(TMR8, TMR_SELECT_CHANNEL_1, lastDuty[4]);
-//			   tmr_event_sw_trigger(TMR8,TMR_TRIGGER_SWTRIG);
-//			   tmr_counter_enable(TMR8, TRUE);
 			   gpio_bits_set(GPIOB, GPIO_PINS_3);
 			   gpio_bits_set(GPIOD, GPIO_PINS_3);
 		   } 
 		   else if(recvKey == -4)
 		   {
-//			   tmr_channel_value_set(TMR8, TMR_SELECT_CHANNEL_1, 0);
-//			   tmr_event_sw_trigger(TMR8,TMR_TRIGGER_SWTRIG);
-//			   tmr_counter_enable(TMR8, TRUE);
 			   gpio_bits_reset(GPIOB, GPIO_PINS_3);
 			   gpio_bits_reset(GPIOD, GPIO_PINS_3);
 		   }
 		}
-
-
-}
-
-// 简易 CRC32 (多项式 0x04C11DB7)
-static uint32_t CRC32_Table[256];
-
-// 在系统启动时调用，一次性填表
-void CRC32_Init(void) {
-	uint32_t i,crc;
-	uint8_t j;
-    uint32_t poly = 0x04C11DB7;
-    for (i = 0; i < 256; i++) {
-        crc = i << 24;
-        for (j = 0; j < 8; j++) {
-            if (crc & 0x80000000) {
-                crc = (crc << 1) ^ poly;
-            } else {
-                crc <<= 1;
-            }
-        }
-        CRC32_Table[i] = crc;
-    }
-}
-
-// 基于查表的 CRC32 计算：buf 长度为 len 字节(crc偏移字节数)
-uint32_t CRC32_Calc(const void *buf, uint32_t len) {
-    const uint8_t *ptr = buf;
-    uint32_t crc = 0xFFFFFFFF;
-    while (len--) {
-        uint8_t idx = (crc >> 24) ^ *ptr++;
-        crc = (crc << 8) ^ CRC32_Table[idx];
-    }
-    return ~crc;
 }
