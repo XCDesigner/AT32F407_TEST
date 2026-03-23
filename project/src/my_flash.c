@@ -65,7 +65,6 @@ void Flash_WriteConfig(const DeviceConfig_t *cfg) {
     }
 	
 	tmp.flag = sectorFlag;
-	tmp.crc  = CRC32_Calc(&tmp, offsetof(DeviceConfig_t, crc));
 	baseAddr = FLASH_SECTOR_ADDR + sectorFlag * FLASH_SLOT_SIZE;	   //本次要写入的扇区起始地址
 
 	flash_bank2_unlock();
@@ -92,8 +91,6 @@ void Flash_Dump(uint32_t address, uint32_t length)
 	DeviceConfig_t tmp;
 	volatile uint8_t *p = (volatile uint8_t *)address;
 	memcpy(&tmp, (void *)address, sizeof(tmp));
-	
-//	crcCalc = CRC32_Calc(&tmp, offsetof(DeviceConfig_t, crc));	
 
     for (i = 0; i < length; i++) {// 每行 16 字节，打印地址
         if ((i & 0x0F) == 0) {
@@ -120,7 +117,7 @@ void Flash_DumpAllSlots(void)
 		
 	memcpy(&tmp, (void *)slotAddr, sizeof(tmp));
 	
-	crcCalc = CRC32_Calc(&tmp, offsetof(DeviceConfig_t, crc));	
+	crcCalc = 0;
 
 	for (i = 0; i < FLASH_SLOT_SIZE; i++) {
         if ((i & 0x0F) == 0) {

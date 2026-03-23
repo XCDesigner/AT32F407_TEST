@@ -232,7 +232,7 @@ void wk_tmr8_init(void)
   tmr_clock_source_div_set(TMR8, TMR_CLOCK_DIV1);
   tmr_repetition_counter_set(TMR8, 0);
   tmr_period_buffer_enable(TMR8, FALSE);
-  tmr_base_init(TMR8, 4799, 0);
+  tmr_base_init(TMR8, 99, 23);
 
   /* configure primary mode settings */
   tmr_sub_sync_mode_set(TMR8, FALSE);
